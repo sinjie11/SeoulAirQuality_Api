@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * - 실시간 대기환경정보 주소 (샘플)
      * <p>
-     * http://openAPI.seoul.go.kr:8088/626b45544573696e36337a75776c4c/xml/ListAirQualityByDistrictService/1/5/
+     * http://openAPI.seoul.go.kr:8088/626b45544573696e36337a75776c4c/xml/ListAirQualityByDistrictService/1/25/
      */
 
     public String realTimeUrl = "http://openAPI.seoul.go.kr:8088/" + KEYS + "/xml/ListAirQualityByDistrictService/1/25/";
@@ -216,14 +216,21 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < basicDatas.size(); i++) {
 
                 if (basicDatas.get(i).getMSRSTENAME().equals(inputText)) { // 입력한 검색 조건(inputText) 과 주소 비교 후 조회
-//                    String s = basicDatas.get(i).getMSRDATE();
-//
-//                    Date date = new Date();
-//                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy년 MM월 dd일 HH시 mm분");
-//                    String ss = sdf.format(date);
-//                    textDate.append("\n");
-//                    textDate.append(ss);
-                    textDate.append(basicDatas.get(i).getMSRDATE());
+
+//                    Log.i(TAG, "inputText : " + inputText);
+                    String s = basicDatas.get(i).getMSRDATE();
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddhhmm");
+                    SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy년 MM월 dd일 hh:mm");;
+                    try {
+                        Date date = sdf.parse(s);
+//                        Log.i(TAG, "date = " + date);
+                        String out = sdf2.format(date);
+                        textDate.append(out);
+//                        Log.i(TAG, "out :" + out);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+//                    textDate.append(basicDatas.get(i).getMSRDATE());
                     textCode.append(basicDatas.get(i).getMSRADMCODE() + "");
                     textName.append(basicDatas.get(i).getMSRSTENAME());
                     textMaxIndex.append(basicDatas.get(i).getMAXINDEX() + "");
