@@ -22,7 +22,7 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
 
     /***
-     *           ※ 서울시 측정소 행정코드 (25개 구)
+            ※ 서울시 측정소 행정코드 (25개 구)
 
      111123 : 종로구,  111121 : 중구,    111131 : 용산구,
      111142 : 성동구,  111141 : 광진구,   111152 : 동대문구,
@@ -101,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         inputAddrText = editText.getText().toString(); // editText 에 입력한 값
 
         try {
+            Thread.sleep(500);
             URL url = new URL(realTimeAllAddr); // 문자열로 된 요청 realTimeAllAddr 을 URL 객체로 생성.
             InputStream is = url.openStream(); // url 위치로 InputStream 연결
 
@@ -116,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
 
             while (eventType != XmlPullParser.END_DOCUMENT) {
 
-
                 switch (eventType) {
                     case XmlPullParser.START_DOCUMENT:// 파싱 시작
 
@@ -124,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
 
                     case XmlPullParser.START_TAG:
                         tag = xpp.getName();// 태그 이름 얻어오기
-
 
                         if (tag.equals("MSRDATE")) { // 측정날짜 및 시간
                             xpp.next();
@@ -174,9 +173,11 @@ public class MainActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+
+        } // end try-catch
+
         return lists;
-    }
+    } // end listBasicData()
 
 
     class GetXmlData extends AsyncTask<Void, Void, Void> {
@@ -230,7 +231,8 @@ public class MainActivity extends AppCompatActivity {
                 } // end if
 
             } // end for
-        }
+
+        } // end onPostExecute
 
     } // end class GetXmlData
 
