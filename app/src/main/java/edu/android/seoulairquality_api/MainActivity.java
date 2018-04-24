@@ -4,19 +4,15 @@ import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
-
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,10 +20,9 @@ import java.util.Date;
 
 
 public class MainActivity extends AppCompatActivity {
-    public static final String TAG = "air";
 
     /***
-     *           ※ 측정소 행정코드
+     *           ※ 서울시 측정소 행정코드 (25개 구)
 
      111123 : 종로구,  111121 : 중구,    111131 : 용산구,
      111142 : 성동구,  111141 : 광진구,   111152 : 동대문구,
@@ -43,27 +38,27 @@ public class MainActivity extends AppCompatActivity {
 
 
     /**
-     * ※ 서울시 열린데이터 광장 인증키 :  626b45544573696e36337a75776c4c
-     */
+       ※ 서울시 열린데이터 광장 인증키 :  626b45544573696e36337a75776c4c
+     **/
     public String KEYS = "626b45544573696e36337a75776c4c";
 
 
-    /**
-     * - 실시간 대기환경정보 주소 (샘플)
-     * <p>
+    /***
+       - 실시간 대기환경정보 주소 (전체 리스트)
+
      * http://openAPI.seoul.go.kr:8088/626b45544573696e36337a75776c4c/xml/ListAirQualityByDistrictService/1/25/
-     */
+     ***/
+    public String realTimeAllAddr = "http://openAPI.seoul.go.kr:8088/" + KEYS + "/xml/ListAirQualityByDistrictService/1/25/";
 
-    public String realTimeUrl = "http://openAPI.seoul.go.kr:8088/" + KEYS + "/xml/ListAirQualityByDistrictService/1/25/";
 
+    /****
+       - 중구 실시간 대기환경정보 (행정코드 검색 조건)
 
-    /**
-     * - 중구 실시간 대기환경정보 (샘플)
-     * <p>
      * http://openAPI.seoul.go.kr:8088/626b45544573696e36337a75776c4c/xml/ListAirQualityByDistrictService/1/5/111121/
-     **/
+     ****/
+    public String realTimeOnlyAddr = "http://openAPI.seoul.go.kr:8088/" + KEYS + "/xml/ListAirQualityByDistrictService/1/5/" + "111121" + "/";
 
-    public String guUrl = "http://openAPI.seoul.go.kr:8088/" + KEYS + "/xml/ListAirQualityByDistrictService/1/5/111121/";
+
 
     private TextView textDate, textCode, textName, textPm10, textPm25, textMaxIndex, textGrade;
     private EditText editText;
@@ -72,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String tag;
 
-    private String inputText;
+    private String inputAddrText;
 
 
     @Override
@@ -95,44 +90,40 @@ public class MainActivity extends AppCompatActivity {
 
     public void readAddrClick(View view) {
 
-        GetXmlData getXmlData = new GetXmlData();
-        getXmlData.execute();
-
+        new GetXmlData().execute();
     } // end readAddrClick
 
-    public ArrayList<BasicData> basicData() { // 데이터 가져오기
+
+    public ArrayList<BasicData> listBasicData() { // 데이터 가져오기
 
         ArrayList<BasicData> lists = new ArrayList<>();
 
-        inputText = editText.getText().toString(); // edit 텍스트에 입력한 주소(검색) 값
+        inputAddrText = editText.getText().toString(); // editText 에 입력한 값
 
         try {
-
-            Thread.sleep(1000);
-            URL url = new URL(realTimeUrl); // 문자열로 된 요청 totalUrl 을 URL 객체로 생성.
-//            Log.i(TAG, "url : ");
+            URL url = new URL(realTimeAllAddr); // 문자열로 된 요청 realTimeAllAddr 을 URL 객체로 생성.
             InputStream is = url.openStream(); // url 위치로 InputStream 연결
 
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             XmlPullParser xpp = factory.newPullParser();
-            xpp.setInput(new InputStreamReader(is)); // InputStream 으로부터 xml 입력받음
+            xpp.setInput(new InputStreamReader(is)); // InputStream 으로부터 XML 입력받음
 
             String tag;
             xpp.next();
 
             int eventType = xpp.getEventType();
             BasicData basicData = new BasicData();
-//            Log.i(TAG, "파싱 Start");
+
             while (eventType != XmlPullParser.END_DOCUMENT) {
 
-//                Log.i(TAG, "while  ");
+
                 switch (eventType) {
-                    case XmlPullParser.START_DOCUMENT://파싱 시작
-//                        Log.i(TAG, "시작 ");
+                    case XmlPullParser.START_DOCUMENT:// 파싱 시작
+
                         break;
 
                     case XmlPullParser.START_TAG:
-                        tag = xpp.getName();//태그 이름 얻어오기
+                        tag = xpp.getName();// 태그 이름 얻어오기
 
 
                         if (tag.equals("MSRDATE")) { // 측정날짜 및 시간
@@ -172,10 +163,10 @@ public class MainActivity extends AppCompatActivity {
                     case XmlPullParser.END_TAG:
                         tag = xpp.getName(); // 태그 이름 얻어오기
                         if (tag.equals("row")) {
-//                            Log.i(TAG, "저장");
                             lists.add(basicData);
                             basicData = new BasicData();
                         }
+
                         break;
                 }
                 eventType = xpp.next();
@@ -192,22 +183,22 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            basicDatas = basicData();
+            basicDatas = listBasicData();
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
 
-            if (inputText == null || inputText.equals("")) {
+            if (inputAddrText == null || inputAddrText.equals("")) {
                 Toast.makeText(MainActivity.this, "검색할 주소가 입력 되지 않았습니다." + "\n" + "주소를 다시 입력해주세요.", Toast.LENGTH_SHORT).show();
 
             } else {
                 textDate.setText("날짜 및 시간 : ");
                 textCode.setText("측정소 행정코드 : ");
                 textName.setText("측정소명 : ");
-                textMaxIndex.setText("통합대기환경지수 : ");
-                textGrade.setText("통합대기환경지수 등급 : ");
+                textMaxIndex.setText("통합대기환경지수(CAI) : ");
+                textGrade.setText("통합대기환경지수(CAI) 등급 : ");
                 textPm10.setText("미세먼지(단위:㎍/㎥) : ");
                 textPm25.setText("초미세먼지(단위:㎍/㎥) : ");
             }
@@ -215,35 +206,82 @@ public class MainActivity extends AppCompatActivity {
 
             for (int i = 0; i < basicDatas.size(); i++) {
 
-                if (basicDatas.get(i).getMSRSTENAME().equals(inputText)) { // 입력한 검색 조건(inputText) 과 주소 비교 후 조회
+                if (basicDatas.get(i).getMSRSTENAME().equals(inputAddrText)) { // 입력한 검색 조건(inputAddrText) 과 주소 비교 후 조회
 
-//                    Log.i(TAG, "inputText : " + inputText);
                     String s = basicDatas.get(i).getMSRDATE();
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddhhmm");
                     SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy년 MM월 dd일 hh:mm");;
+
                     try {
                         Date date = sdf.parse(s);
-//                        Log.i(TAG, "date = " + date);
                         String out = sdf2.format(date);
                         textDate.append(out);
-//                        Log.i(TAG, "out :" + out);
+
                     } catch (ParseException e) {
                         e.printStackTrace();
                     }
-//                    textDate.append(basicDatas.get(i).getMSRDATE());
                     textCode.append(basicDatas.get(i).getMSRADMCODE() + "");
                     textName.append(basicDatas.get(i).getMSRSTENAME());
                     textMaxIndex.append(basicDatas.get(i).getMAXINDEX() + "");
                     textGrade.append(basicDatas.get(i).getGRADE());
-                    textPm10.append(basicDatas.get(i).getPM10() + "");
-                    textPm25.append(basicDatas.get(i).getPM25() + "");
+                    textPm10.append(basicDatas.get(i).getPM10() + " " + "㎍/㎥");
+                    textPm25.append(basicDatas.get(i).getPM25() + " " + "㎍/㎥");
 
                 } // end if
 
             } // end for
         }
-    }
+
+    } // end class GetXmlData
 
 
 } // end class MainActivity
+
+
+
+
+    /**
+       - 아래 행정코드 배열 값은 필요하면 가져다 쓰면 됨 -
+     *
+     public String[] addrGu1 = {
+     "111123", "111121", "111131",
+     "111142", "111141", "111152",
+     "111151", "111161", "111291",
+     "111171", "111311", "111181",
+     "111191", "111201", "111301",
+     "111212", "111221", "111281",
+     "111231", "111241", "111251",
+     "111262", "111261", "111273",
+     "111274"
+
+     };
+
+
+     public int[] addrGu2 = {
+     111123, 111121, 111131,
+     111142, 111141, 111152,
+     111151, 111161, 111291,
+     111171, 111311, 111181,
+     111191, 111201, 111301,
+     111212, 111221, 111281,
+     111231, 111241, 111251,
+     111262, 111261, 111273,
+     111274
+
+     };
+
+
+     public String[] addrGu3 = {
+     "종로구", "중구", "용산구",
+     "성동구", "광진구", "동대문구",
+     "중랑구", "성북구", "강북구",
+     "도봉구", "노원구", "은평구",
+     "서대문구", "마포구", "양천구",
+     "강서구", "구로구", "금천구",
+     "영등포구", "동작구", "관악구",
+     "서초구", "강남구", "송파구",
+     "강동구"
+     };
+
+     */
 
